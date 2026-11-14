@@ -43,6 +43,7 @@ spring-boot-starter-websocket = { module = "org.springframework.boot:spring-boot
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 spring-boot-starter-oauth2-resource-server = { module = "org.springframework.boot:spring-boot-starter-oauth2-resource-server" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 
 # Bouncy Castle crypto API
 bouncycastle-bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
@@ -50,13 +51,15 @@ bouncycastle-bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", vers
 # MongoDB
 mongodb-driver-bom = { module = "org.mongodb:mongodb-driver-bom", version.ref = "mongodb"}
 mongodb-driver-kotlin-coroutine = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongodb"}
-
 # PostgreSQL
 postgresql = { module = "org.postgresql:postgresql" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
 
 # Lombok
 lombok = { module = "org.projectlombok:lombok" }
+
+# JUnit
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
