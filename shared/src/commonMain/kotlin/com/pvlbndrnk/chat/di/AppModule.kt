@@ -18,6 +18,7 @@ import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.post
@@ -46,6 +47,8 @@ fun appModule(serverBaseUrl: String) = module {
                 url(serverBaseUrl)
             }
             install(Logging) {
+                logger = httpLogger
+                level = LogLevel.ALL
                 sanitizeHeader { header ->
                     header.equals(HttpHeaders.Authorization, ignoreCase = true)
                 }
