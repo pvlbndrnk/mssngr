@@ -1,11 +1,15 @@
 package com.pvlbndrnk.messenger.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.pvlbndrnk.messenger.auth.config.AuthProperties;
 import com.pvlbndrnk.messenger.auth.domain.Token;
+import com.pvlbndrnk.messenger.auth.exception.InvalidTokenException;
 import com.pvlbndrnk.messenger.auth.repository.TokenRepository;
 import com.pvlbndrnk.messenger.user.User;
 
@@ -32,6 +36,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -97,9 +102,7 @@ public class TokenServiceTest {
     @Test
     void refreshTokenIsPersistedOnlyAsSha256Hash() throws NoSuchAlgorithmException {
         String rawToken = tokenService.createRefreshToken(user);
-        byte[] digest = MessageDigest.getInstance("SHA-256")
-                .digest(rawToken.getBytes(StandardCharsets.UTF_8));
-        String hashedToken = HexFormat.of().formatHex(digest);
+        String hashedToken = hashedToken(rawToken);
         Token capturedToken = captureSavedToken();
 
         assertThat(capturedToken.getTokenHash())
@@ -121,6 +124,28 @@ public class TokenServiceTest {
     void refreshTokenIsUrlSafeAndHas256BitsOfEntropy() {
         String rawToken = tokenService.createRefreshToken(user);
         assertThat(rawToken).matches("[A-Za-z0-9_-]{43}");
+    }
+
+    @Test
+    void validRefreshTokenIsAccepted() throws NoSuchAlgorithmException {
+        String rawToken = "raw-token";
+        String hashedToken = hashedToken(rawToken);
+        Instant expiresAt = NOW.plusSeconds(1);
+        Token token = Token.create(user, hashedToken, expiresAt);
+        when(tokenRepository.findByTokenHash(hashedToken)).thenReturn(Optional.of(token));
+        assertThat(tokenService.findValidRefreshToken(rawToken)).isSameAs(token);
+    }
+
+    @Test
+    void unknownRefreshTokenIsRejected() {
+        when(tokenRepository.findByTokenHash(any())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> tokenService.findValidRefreshToken("any-token")).isInstanceOf(InvalidTokenException.class);
+    }
+
+    private String hashedToken(String rawToken) throws NoSuchAlgorithmException {
+        byte[] digest = MessageDigest.getInstance("SHA-256")
+                .digest(rawToken.getBytes(StandardCharsets.UTF_8));
+        return HexFormat.of().formatHex(digest);
     }
 
     private Token captureSavedToken() {
