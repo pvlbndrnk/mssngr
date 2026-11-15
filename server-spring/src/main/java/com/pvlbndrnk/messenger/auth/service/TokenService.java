@@ -54,7 +54,7 @@ public class TokenService {
         String rawToken = generateRefreshToken();
         String rawTokenHash = hashRefreshToken(rawToken);
 
-        Instant expiresAt = clock.instant().plus(Duration.ofDays(30));
+        Instant expiresAt = clock.instant().plus(authProperties.jwt().refreshTokenTtl());
 
         Token token = Token.create(user, rawTokenHash, expiresAt);
         tokenRepository.save(token);

@@ -94,7 +94,7 @@ public class TokenServiceTest {
     }
 
     @Test
-    void refreshTokenExpiresAfterThirtyDays() {
+    void refreshTokenExpiresAfterConfiguredTtl() {
         tokenService.createRefreshToken(user);
         Instant actualExpiresAt = captureSavedToken().getExpiresAt();
         Instant expectedExpiresAt = NOW.plus(authProperties.jwt().refreshTokenTtl());
