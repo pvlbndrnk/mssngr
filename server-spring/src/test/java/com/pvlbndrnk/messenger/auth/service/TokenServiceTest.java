@@ -54,8 +54,7 @@ class TokenServiceTest {
             "HmacSHA256"
     );
 
-    @Mock
-    private TokenRepository tokenRepository;
+    @Mock private TokenRepository tokenRepository;
 
     private User user;
     private JwtDecoder jwtDecoder;
