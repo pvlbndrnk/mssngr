@@ -1,7 +1,6 @@
 package com.pvlbndrnk.messenger.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.verify;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
@@ -24,8 +23,10 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -34,6 +35,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 @ExtendWith(MockitoExtension.class)
 public class TokenServiceTest {
+
+    private static final Instant NOW = Instant.now().truncatedTo(ChronoUnit.SECONDS);
     private static final SecretKey KEY = new SecretKeySpec(
             "test-secret-that-is-at-least-32-bytes".getBytes(StandardCharsets.UTF_8),
             "HmacSHA256"
@@ -56,6 +59,7 @@ public class TokenServiceTest {
     @BeforeEach
     void setUp() {
         tokenService = new TokenService(
+                Clock.fixed(NOW, ZoneOffset.UTC),
                 new NimbusJwtEncoder(new ImmutableSecret<>(KEY)),
                 authProperties,
                 tokenRepository
@@ -71,10 +75,9 @@ public class TokenServiceTest {
     void accessTokenCarriesUserIdAsSubjectAndExpiresAfterTtl() {
         String accessToken = tokenService.createAccessToken(user);
         Jwt jwt = jwtDecoder.decode(accessToken);
-        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
         assertThat(jwt.getSubject()).isEqualTo(user.getId().toString());
-        assertThat(jwt.getIssuedAt()).isEqualTo(now);
-        assertThat(jwt.getExpiresAt()).isEqualTo(now.plus(authProperties.jwt().accessTokenTtl()));
+        assertThat(jwt.getIssuedAt()).isEqualTo(NOW);
+        assertThat(jwt.getExpiresAt()).isEqualTo(NOW.plus(authProperties.jwt().accessTokenTtl()));
         assertThat(jwt.getHeaders()).containsEntry("alg", "HS256");
     }
 
@@ -84,8 +87,8 @@ public class TokenServiceTest {
         ArgumentCaptor<Token> argumentCaptor = ArgumentCaptor.forClass(Token.class);
         verify(tokenRepository).save(argumentCaptor.capture());
         Instant actualExpiresAt = argumentCaptor.getValue().getExpiresAt();
-        Instant expectedExpiresAt = Instant.now().plus(authProperties.jwt().refreshTokenTtl());
-        assertThat(actualExpiresAt).isCloseTo(expectedExpiresAt, within(2, ChronoUnit.SECONDS));
+        Instant expectedExpiresAt = NOW.plus(authProperties.jwt().refreshTokenTtl());
+        assertThat(actualExpiresAt).isEqualTo(expectedExpiresAt);
     }
 
     private User userWithId(UUID id) {

@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class TokenService {
+    private final Clock clock;
     private final JwtEncoder jwtEncoder;
     private final AuthProperties authProperties;
     private final TokenRepository tokenRepository;
@@ -37,7 +39,7 @@ public class TokenService {
     }
 
     public String createAccessToken(User user) {
-        Instant now = Instant.now();
+        Instant now = clock.instant();
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .subject(user.getId().toString())
                 .issuedAt(now)
@@ -52,7 +54,7 @@ public class TokenService {
         String rawToken = generateRefreshToken();
         String rawTokenHash = hashRefreshToken(rawToken);
 
-        Instant expiresAt = Instant.now().plus(Duration.ofDays(30));
+        Instant expiresAt = clock.instant().plus(Duration.ofDays(30));
 
         Token token = Token.create(user, rawTokenHash, expiresAt);
         tokenRepository.save(token);
@@ -63,7 +65,7 @@ public class TokenService {
         String tokenHash = hashRefreshToken(rawToken);
         Token session = tokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(InvalidTokenException::new);
-        Instant now = Instant.now();
+        Instant now = clock.instant();
         if (session.getRevokedAt() != null || !session.getExpiresAt().isAfter(now)) {
             throw new InvalidTokenException();
         }
