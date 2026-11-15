@@ -12,6 +12,7 @@ koin = "4.2.2"
 kotlinxSerialization = "1.11.0"
 springBoot = "4.1.1"
 bouncycastle = "1.86"
+mockito = "5.24.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
@@ -60,6 +61,7 @@ lombok = { module = "org.projectlombok:lombok" }
 
 # JUnit
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

@@ -9,6 +9,8 @@ java {
     }
 }
 
+val mockitoAgent = configurations.create("mockitoAgent")
+
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     annotationProcessor(platform(libs.spring.boot.bom))
@@ -32,8 +34,14 @@ dependencies {
 
     testImplementation(libs.spring.boot.starter.test)
     testRuntimeOnly(libs.junit.platform.launcher)
+
+    testImplementation(libs.mockito.core)
+    mockitoAgent(libs.mockito.core) {
+        isTransitive = false
+    }
 }
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs("-javaagent:${mockitoAgent.asPath}")
 }
