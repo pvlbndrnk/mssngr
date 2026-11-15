@@ -1,9 +1,14 @@
 package com.pvlbndrnk.messenger.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.pvlbndrnk.messenger.auth.exception.UserAlreadyExistsException;
 import com.pvlbndrnk.messenger.user.User;
 import com.pvlbndrnk.messenger.user.UserRepository;
 
@@ -42,5 +47,16 @@ class AuthServiceTest {
 
         assertThat(registered.getUsername()).isEqualTo("john");
         assertThat(registered.getPasswordHash()).isEqualTo("encoded-secret");
+    }
+
+    @Test
+    void registerRejectsTakenUsernameWithoutHashingPassword() {
+        when(userRepository.existsByUsername("john")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.register("John", "secret"))
+                .isInstanceOf(UserAlreadyExistsException.class);
+
+        verify(userRepository, never()).save(any());
+        verifyNoInteractions(passwordEncoder);
     }
 }
