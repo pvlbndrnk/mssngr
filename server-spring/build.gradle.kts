@@ -35,6 +35,8 @@ dependencies {
     testImplementation(libs.spring.boot.starter.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 
+    testImplementation(libs.spring.boot.starter.security.test)
+
     testImplementation(libs.mockito.core)
     mockitoAgent(libs.mockito.core) {
         isTransitive = false

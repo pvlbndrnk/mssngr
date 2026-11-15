@@ -3,6 +3,7 @@ package com.pvlbndrnk.messenger.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -19,7 +20,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -71,5 +78,34 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.register("John", "secret"))
                 .isInstanceOf(UserAlreadyExistsException.class);
+    }
+
+    @Test
+    void loginPassesRawCredentialsToAuthenticationManagerAndIssuesBothTokens() {
+        User user = userWithId("John");
+        when(authenticationManager.authenticate(any()))
+                .thenReturn(UsernamePasswordAuthenticationToken.authenticated(
+                        "John",
+                        null,
+                        List.of()
+                ));
+        when(userRepository.findByUsername("John")).thenReturn(Optional.of(user));
+        when(tokenService.createAccessToken(user)).thenReturn("access-token");
+        when(tokenService.createRefreshToken(user)).thenReturn("refresh-token");
+        when(tokenService.accessTokenTtlInSeconds()).thenReturn(900L);
+
+        LoginResult result = authService.login("John", "secret");
+
+        assertThat(result).isEqualTo(new LoginResult(user, "access-token", "refresh-token", 900L));
+        verify(authenticationManager).authenticate(argThat(request ->
+                !request.isAuthenticated()
+                        && request.getName().equals("John")
+                        && "secret".equals(request.getCredentials())));
+    }
+
+    private User userWithId(String username) {
+        User user = User.create(username, "hash");
+        ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
+        return user;
     }
 }
