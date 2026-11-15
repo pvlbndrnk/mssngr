@@ -46,7 +46,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 @ExtendWith(MockitoExtension.class)
-public class TokenServiceTest {
+class TokenServiceTest {
 
     private static final Instant NOW = Instant.now().truncatedTo(ChronoUnit.SECONDS);
     private static final SecretKey KEY = new SecretKeySpec(
@@ -60,7 +60,8 @@ public class TokenServiceTest {
     private User user;
     private JwtDecoder jwtDecoder;
     private TokenService tokenService;
-    private AuthProperties authProperties = new AuthProperties(
+
+    private final AuthProperties authProperties = new AuthProperties(
             new AuthProperties.Jwt(
                     Duration.ofMinutes(15),
                     Duration.ofDays(30),
@@ -87,6 +88,7 @@ public class TokenServiceTest {
     void accessTokenCarriesUserIdAsSubjectAndExpiresAfterTtl() {
         String accessToken = tokenService.createAccessToken(user);
         Jwt jwt = jwtDecoder.decode(accessToken);
+
         assertThat(jwt.getSubject()).isEqualTo(user.getId().toString());
         assertThat(jwt.getIssuedAt()).isEqualTo(NOW);
         assertThat(jwt.getExpiresAt()).isEqualTo(NOW.plus(authProperties.jwt().accessTokenTtl()));
@@ -96,13 +98,15 @@ public class TokenServiceTest {
     @Test
     void refreshTokenExpiresAfterConfiguredTtl() {
         tokenService.createRefreshToken(user);
+
         Instant actualExpiresAt = captureSavedToken().getExpiresAt();
         Instant expectedExpiresAt = NOW.plus(authProperties.jwt().refreshTokenTtl());
+
         assertThat(actualExpiresAt).isEqualTo(expectedExpiresAt);
     }
 
     @Test
-    void refreshTokenIsPersistedOnlyAsSha256Hash() throws NoSuchAlgorithmException {
+    void refreshTokenIsPersistedOnlyAsSha256Hash() {
         String rawToken = tokenService.createRefreshToken(user);
         String hashedToken = hashedToken(rawToken);
         Token capturedToken = captureSavedToken();
@@ -125,46 +129,58 @@ public class TokenServiceTest {
     @Test
     void refreshTokenIsUrlSafeAndHas256BitsOfEntropy() {
         String rawToken = tokenService.createRefreshToken(user);
+
         assertThat(rawToken).matches("[A-Za-z0-9_-]{43}");
     }
 
     @Test
-    void validRefreshTokenIsAccepted() throws NoSuchAlgorithmException {
+    void validRefreshTokenIsAccepted() {
         Token token = token("raw-token", NOW.plusSeconds(1));
+
         assertThat(tokenService.findValidRefreshToken("raw-token")).isSameAs(token);
     }
 
     @Test
     void unknownRefreshTokenIsRejected() {
         when(tokenRepository.findByTokenHash(any())).thenReturn(Optional.empty());
+
         assertThatThrownBy(() -> tokenService.findValidRefreshToken("any-token"))
                 .isInstanceOf(InvalidTokenException.class);
     }
 
     @ParameterizedTest
     @ValueSource(longs = {0, -1, -86_400})
-    void expiredRefreshTokenIsRejected(long secondsUntilExpiry) throws NoSuchAlgorithmException {
+    void expiredRefreshTokenIsRejected(long secondsUntilExpiry) {
         token("raw-token", NOW.plusSeconds(secondsUntilExpiry));
+
         assertThatThrownBy(() -> tokenService.findValidRefreshToken("raw-token"))
                 .isInstanceOf(InvalidTokenException.class);
     }
 
-    private Token token(String rawToken, Instant expiresAt) throws NoSuchAlgorithmException {
+    private Token token(String rawToken, Instant expiresAt) {
         String hashedToken = hashedToken(rawToken);
         Token token = Token.create(user, hashedToken, expiresAt);
+
         when(tokenRepository.findByTokenHash(hashedToken)).thenReturn(Optional.of(token));
+
         return token;
     }
 
-    private String hashedToken(String rawToken) throws NoSuchAlgorithmException {
-        byte[] digest = MessageDigest.getInstance("SHA-256")
-                .digest(rawToken.getBytes(StandardCharsets.UTF_8));
-        return HexFormat.of().formatHex(digest);
+    private String hashedToken(String rawToken) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Token captureSavedToken() {
         ArgumentCaptor<Token> argumentCaptor = ArgumentCaptor.forClass(Token.class);
+
         verify(tokenRepository).save(argumentCaptor.capture());
+
         return argumentCaptor.getValue();
     }
 
