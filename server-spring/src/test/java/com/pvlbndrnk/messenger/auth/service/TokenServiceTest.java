@@ -1,14 +1,21 @@
 package com.pvlbndrnk.messenger.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.mockito.Mockito.verify;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.pvlbndrnk.messenger.auth.config.AuthProperties;
+import com.pvlbndrnk.messenger.auth.domain.Token;
 import com.pvlbndrnk.messenger.auth.repository.TokenRepository;
 import com.pvlbndrnk.messenger.user.User;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -25,19 +32,23 @@ import java.util.UUID;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+@ExtendWith(MockitoExtension.class)
 public class TokenServiceTest {
     private static final SecretKey KEY = new SecretKeySpec(
             "test-secret-that-is-at-least-32-bytes".getBytes(StandardCharsets.UTF_8),
             "HmacSHA256"
     );
 
+    @Mock
+    private TokenRepository tokenRepository;
+
     private User user;
     private JwtDecoder jwtDecoder;
     private TokenService tokenService;
-    private TokenRepository tokenRepository;
     private AuthProperties authProperties = new AuthProperties(
             new AuthProperties.Jwt(
                     Duration.ofMinutes(15),
+                    Duration.ofDays(30),
                     "dummy-base64-secret-for-unit-tests"
             )
     );
@@ -65,6 +76,16 @@ public class TokenServiceTest {
         assertThat(jwt.getIssuedAt()).isEqualTo(now);
         assertThat(jwt.getExpiresAt()).isEqualTo(now.plus(authProperties.jwt().accessTokenTtl()));
         assertThat(jwt.getHeaders()).containsEntry("alg", "HS256");
+    }
+
+    @Test
+    void refreshTokenExpiresAfterThirtyDays() {
+        tokenService.createRefreshToken(user);
+        ArgumentCaptor<Token> argumentCaptor = ArgumentCaptor.forClass(Token.class);
+        verify(tokenRepository).save(argumentCaptor.capture());
+        Instant actualExpiresAt = argumentCaptor.getValue().getExpiresAt();
+        Instant expectedExpiresAt = Instant.now().plus(authProperties.jwt().refreshTokenTtl());
+        assertThat(actualExpiresAt).isCloseTo(expectedExpiresAt, within(2, ChronoUnit.SECONDS));
     }
 
     private User userWithId(UUID id) {
