@@ -23,11 +23,14 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.HexFormat;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
@@ -84,11 +87,29 @@ public class TokenServiceTest {
     @Test
     void refreshTokenExpiresAfterThirtyDays() {
         tokenService.createRefreshToken(user);
-        ArgumentCaptor<Token> argumentCaptor = ArgumentCaptor.forClass(Token.class);
-        verify(tokenRepository).save(argumentCaptor.capture());
-        Instant actualExpiresAt = argumentCaptor.getValue().getExpiresAt();
+        Instant actualExpiresAt = captureSavedToken().getExpiresAt();
         Instant expectedExpiresAt = NOW.plus(authProperties.jwt().refreshTokenTtl());
         assertThat(actualExpiresAt).isEqualTo(expectedExpiresAt);
+    }
+
+    @Test
+    void refreshTokenIsPersistedOnlyAsSha256Hash() throws NoSuchAlgorithmException {
+        String rawToken = tokenService.createRefreshToken(user);
+        byte[] digest = MessageDigest.getInstance("SHA-256")
+                .digest(rawToken.getBytes(StandardCharsets.UTF_8));
+        String hashedToken = HexFormat.of().formatHex(digest);
+        Token capturedToken = captureSavedToken();
+
+        assertThat(capturedToken.getTokenHash())
+                .isNotEqualTo(rawToken)
+                .isEqualTo(hashedToken);
+        assertThat(capturedToken.getUser()).isSameAs(user);
+    }
+
+    private Token captureSavedToken() {
+        ArgumentCaptor<Token> argumentCaptor = ArgumentCaptor.forClass(Token.class);
+        verify(tokenRepository).save(argumentCaptor.capture());
+        return argumentCaptor.getValue();
     }
 
     private User userWithId(UUID id) {
