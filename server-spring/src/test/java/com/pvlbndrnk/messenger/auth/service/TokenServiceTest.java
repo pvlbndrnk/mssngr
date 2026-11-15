@@ -117,6 +117,12 @@ public class TokenServiceTest {
         assertThat(tokens).hasSize(1_000);
     }
 
+    @Test
+    void refreshTokenIsUrlSafeAndHas256BitsOfEntropy() {
+        String rawToken = tokenService.createRefreshToken(user);
+        assertThat(rawToken).matches("[A-Za-z0-9_-]{43}");
+    }
+
     private Token captureSavedToken() {
         ArgumentCaptor<Token> argumentCaptor = ArgumentCaptor.forClass(Token.class);
         verify(tokenRepository).save(argumentCaptor.capture());
