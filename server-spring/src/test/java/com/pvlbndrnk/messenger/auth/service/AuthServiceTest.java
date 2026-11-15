@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -58,5 +59,17 @@ class AuthServiceTest {
 
         verify(userRepository, never()).save(any());
         verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    void registerTreatsConcurrentUniqueViolationAsTakenUsername() {
+        when(userRepository.existsByUsername("john")).thenReturn(false);
+        when(passwordEncoder.encode("secret")).thenReturn("encoded-secret");
+        when(userRepository.save(any(User.class))).thenThrow(
+                new DataIntegrityViolationException("duplicate key users_username_key")
+        );
+
+        assertThatThrownBy(() -> authService.register("John", "secret"))
+                .isInstanceOf(UserAlreadyExistsException.class);
     }
 }

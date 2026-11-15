@@ -5,6 +5,7 @@ import com.pvlbndrnk.messenger.auth.exception.UserAlreadyExistsException;
 import com.pvlbndrnk.messenger.user.User;
 import com.pvlbndrnk.messenger.user.UserRepository;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,7 +31,11 @@ public class AuthService {
         }
 
         String passwordHash = passwordEncoder.encode(password);
-        return userRepository.save(User.create(normalizedUsername, passwordHash));
+        try {
+            return userRepository.save(User.create(normalizedUsername, passwordHash));
+        } catch (DataIntegrityViolationException e) {
+            throw new UserAlreadyExistsException("User already exists");
+        }
     }
 
     public LoginResult login(String username, String password) {
