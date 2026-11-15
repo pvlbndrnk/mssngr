@@ -16,6 +16,8 @@ import com.pvlbndrnk.messenger.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -128,18 +130,30 @@ public class TokenServiceTest {
 
     @Test
     void validRefreshTokenIsAccepted() throws NoSuchAlgorithmException {
-        String rawToken = "raw-token";
-        String hashedToken = hashedToken(rawToken);
-        Instant expiresAt = NOW.plusSeconds(1);
-        Token token = Token.create(user, hashedToken, expiresAt);
-        when(tokenRepository.findByTokenHash(hashedToken)).thenReturn(Optional.of(token));
-        assertThat(tokenService.findValidRefreshToken(rawToken)).isSameAs(token);
+        Token token = token("raw-token", NOW.plusSeconds(1));
+        assertThat(tokenService.findValidRefreshToken("raw-token")).isSameAs(token);
     }
 
     @Test
     void unknownRefreshTokenIsRejected() {
         when(tokenRepository.findByTokenHash(any())).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> tokenService.findValidRefreshToken("any-token")).isInstanceOf(InvalidTokenException.class);
+        assertThatThrownBy(() -> tokenService.findValidRefreshToken("any-token"))
+                .isInstanceOf(InvalidTokenException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -86_400})
+    void expiredRefreshTokenIsRejected(long secondsUntilExpiry) throws NoSuchAlgorithmException {
+        token("raw-token", NOW.plusSeconds(secondsUntilExpiry));
+        assertThatThrownBy(() -> tokenService.findValidRefreshToken("raw-token"))
+                .isInstanceOf(InvalidTokenException.class);
+    }
+
+    private Token token(String rawToken, Instant expiresAt) throws NoSuchAlgorithmException {
+        String hashedToken = hashedToken(rawToken);
+        Token token = Token.create(user, hashedToken, expiresAt);
+        when(tokenRepository.findByTokenHash(hashedToken)).thenReturn(Optional.of(token));
+        return token;
     }
 
     private String hashedToken(String rawToken) throws NoSuchAlgorithmException {
