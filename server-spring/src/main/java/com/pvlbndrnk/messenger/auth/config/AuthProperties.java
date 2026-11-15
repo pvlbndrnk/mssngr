@@ -16,6 +16,7 @@ public record AuthProperties(
 ) {
     public record Jwt(
             @NotNull Duration accessTokenTtl,
+            @NotNull Duration refreshTokenTtl,
             @NotBlank String secretBase64
     ) {}
 }
