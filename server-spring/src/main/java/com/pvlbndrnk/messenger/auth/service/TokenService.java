@@ -1,11 +1,11 @@
 package com.pvlbndrnk.messenger.auth.service;
 
+import com.pvlbndrnk.messenger.auth.config.AuthProperties;
 import com.pvlbndrnk.messenger.auth.domain.Token;
 import com.pvlbndrnk.messenger.auth.exception.InvalidTokenException;
 import com.pvlbndrnk.messenger.auth.repository.TokenRepository;
 import com.pvlbndrnk.messenger.user.User;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -22,25 +22,18 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class TokenService {
-    private final Duration accessTtl;
     private final JwtEncoder jwtEncoder;
+    private final AuthProperties authProperties;
     private final TokenRepository tokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public TokenService(
-            JwtEncoder jwtEncoder,
-            TokenRepository tokenRepository,
-            @Value("${auth.jwt.access-ttl}") Duration accessTtl
-    ) {
-        this.jwtEncoder = jwtEncoder;
-        this.tokenRepository = tokenRepository;
-        this.accessTtl = accessTtl;
-    }
-
     public long accessTokenTtlInSeconds() {
-        return accessTtl.toSeconds();
+        return authProperties.jwt().accessTokenTtl().toSeconds();
     }
 
     public String createAccessToken(User user) {
@@ -48,7 +41,7 @@ public class TokenService {
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .subject(user.getId().toString())
                 .issuedAt(now)
-                .expiresAt(now.plus(accessTtl))
+                .expiresAt(now.plus(authProperties.jwt().accessTokenTtl()))
                 .build();
         JwsHeader jwsHeader = JwsHeader.with(MacAlgorithm.HS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claimsSet))

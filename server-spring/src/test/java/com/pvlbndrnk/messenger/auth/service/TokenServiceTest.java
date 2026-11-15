@@ -3,6 +3,7 @@ package com.pvlbndrnk.messenger.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.pvlbndrnk.messenger.auth.config.AuthProperties;
 import com.pvlbndrnk.messenger.auth.repository.TokenRepository;
 import com.pvlbndrnk.messenger.user.User;
 
@@ -25,8 +26,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class TokenServiceTest {
-
-    private static final Duration ACCESS_TTL = Duration.ofMinutes(15);
     private static final SecretKey KEY = new SecretKeySpec(
             "test-secret-that-is-at-least-32-bytes".getBytes(StandardCharsets.UTF_8),
             "HmacSHA256"
@@ -36,13 +35,19 @@ public class TokenServiceTest {
     private JwtDecoder jwtDecoder;
     private TokenService tokenService;
     private TokenRepository tokenRepository;
+    private AuthProperties authProperties = new AuthProperties(
+            new AuthProperties.Jwt(
+                    Duration.ofMinutes(15),
+                    "dummy-base64-secret-for-unit-tests"
+            )
+    );
 
     @BeforeEach
     void setUp() {
         tokenService = new TokenService(
                 new NimbusJwtEncoder(new ImmutableSecret<>(KEY)),
-                tokenRepository,
-                ACCESS_TTL
+                authProperties,
+                tokenRepository
         );
         jwtDecoder = NimbusJwtDecoder
                 .withSecretKey(KEY)
@@ -58,7 +63,7 @@ public class TokenServiceTest {
         Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
         assertThat(jwt.getSubject()).isEqualTo(user.getId().toString());
         assertThat(jwt.getIssuedAt()).isEqualTo(now);
-        assertThat(jwt.getExpiresAt()).isEqualTo(now.plus(ACCESS_TTL));
+        assertThat(jwt.getExpiresAt()).isEqualTo(now.plus(authProperties.jwt().accessTokenTtl()));
         assertThat(jwt.getHeaders()).containsEntry("alg", "HS256");
     }
 

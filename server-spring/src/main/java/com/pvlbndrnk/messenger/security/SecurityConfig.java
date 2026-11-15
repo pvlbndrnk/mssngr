@@ -1,8 +1,8 @@
 package com.pvlbndrnk.messenger.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.pvlbndrnk.messenger.auth.config.AuthProperties;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -62,8 +62,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecretKey secretKey(@Value("${auth.jwt.secret-base64}") String secretBase64) {
-        byte[] decode = Base64.getDecoder().decode(secretBase64);
+    public SecretKey secretKey(AuthProperties properties) {
+        byte[] decode = Base64.getDecoder().decode(properties.jwt().secretBase64());
         if (decode.length < 32) {
             throw new IllegalStateException("JWT secret must contain at least 32 bytes");
         }
