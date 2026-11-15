@@ -30,7 +30,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.HexFormat;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
@@ -104,6 +106,15 @@ public class TokenServiceTest {
                 .isNotEqualTo(rawToken)
                 .isEqualTo(hashedToken);
         assertThat(capturedToken.getUser()).isSameAs(user);
+    }
+
+    @Test
+    void refreshTokensAreUnique() {
+        Set<String> tokens = new HashSet<>();
+        for (int i = 0; i < 1_000; i++) {
+            tokens.add(tokenService.createRefreshToken(user));
+        }
+        assertThat(tokens).hasSize(1_000);
     }
 
     private Token captureSavedToken() {
