@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.pvlbndrnk.messenger.auth.domain.Token;
 import com.pvlbndrnk.messenger.auth.exception.UserAlreadyExistsException;
 import com.pvlbndrnk.messenger.user.User;
 import com.pvlbndrnk.messenger.user.UserRepository;
@@ -25,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -113,6 +115,19 @@ class AuthServiceTest {
                 .isInstanceOf(BadCredentialsException.class);
 
         verifyNoInteractions(tokenService);
+    }
+
+    @Test
+    void refreshIssuesAccessTokenForRefreshTokenOwner() {
+        User john = userWithId("John");
+        Token token = Token.create(john, "hash", Instant.now().plusSeconds(20));
+        when(tokenService.findValidRefreshToken("refresh-token")).thenReturn(token);
+        when(tokenService.createAccessToken(john)).thenReturn("new-access-token");
+        when(tokenService.accessTokenTtlInSeconds()).thenReturn(900L);
+
+        TokenResult tokenResult = authService.createAccessToken("refresh-token");
+
+        assertThat(tokenResult).isEqualTo(new TokenResult(john, "new-access-token", 900L));
     }
 
     private User userWithId(String username) {
