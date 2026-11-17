@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.pvlbndrnk.messenger.auth.domain.Token;
 import com.pvlbndrnk.messenger.auth.exception.InvalidTokenException;
 import com.pvlbndrnk.messenger.auth.exception.UserAlreadyExistsException;
+import com.pvlbndrnk.messenger.user.TestUsers;
 import com.pvlbndrnk.messenger.user.User;
 import com.pvlbndrnk.messenger.user.UserRepository;
 
@@ -25,12 +26,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -86,7 +85,7 @@ class AuthServiceTest {
 
     @Test
     void loginPassesRawCredentialsToAuthenticationManagerAndIssuesBothTokens() {
-        User user = userWithId("John");
+        User user = TestUsers.create("John", "hash");
         when(authenticationManager.authenticate(any()))
                 .thenReturn(UsernamePasswordAuthenticationToken.authenticated(
                         "John",
@@ -120,7 +119,7 @@ class AuthServiceTest {
 
     @Test
     void refreshIssuesAccessTokenForRefreshTokenOwner() {
-        User john = userWithId("John");
+        User john = TestUsers.create("John", "hash");
         Token token = Token.create(john, "hash", Instant.now().plusSeconds(20));
         when(tokenService.findValidRefreshToken("refresh-token")).thenReturn(token);
         when(tokenService.createAccessToken(john)).thenReturn("new-access-token");
@@ -140,11 +139,5 @@ class AuthServiceTest {
                 .isInstanceOf(InvalidTokenException.class);
 
         verify(tokenService, never()).createRefreshToken(any());
-    }
-
-    private User userWithId(String username) {
-        User user = User.create(username, "hash");
-        ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
-        return user;
     }
 }

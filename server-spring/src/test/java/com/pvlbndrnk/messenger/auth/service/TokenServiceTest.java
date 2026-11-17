@@ -11,6 +11,7 @@ import com.pvlbndrnk.messenger.auth.config.AuthProperties;
 import com.pvlbndrnk.messenger.auth.domain.Token;
 import com.pvlbndrnk.messenger.auth.exception.InvalidTokenException;
 import com.pvlbndrnk.messenger.auth.repository.TokenRepository;
+import com.pvlbndrnk.messenger.user.TestUsers;
 import com.pvlbndrnk.messenger.user.User;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +27,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -80,7 +79,7 @@ class TokenServiceTest {
                 .withSecretKey(KEY)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
-        user = userWithId(UUID.randomUUID());
+        user = TestUsers.create("Alice", "hash");
     }
 
     @Test
@@ -181,11 +180,5 @@ class TokenServiceTest {
         verify(tokenRepository).save(argumentCaptor.capture());
 
         return argumentCaptor.getValue();
-    }
-
-    private User userWithId(UUID id) {
-        User user = User.create("alice", "hash");
-        ReflectionTestUtils.setField(user, "id", id);
-        return user;
     }
 }
