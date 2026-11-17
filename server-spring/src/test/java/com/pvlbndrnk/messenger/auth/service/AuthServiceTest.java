@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.pvlbndrnk.messenger.auth.domain.Token;
+import com.pvlbndrnk.messenger.auth.exception.InvalidTokenException;
 import com.pvlbndrnk.messenger.auth.exception.UserAlreadyExistsException;
 import com.pvlbndrnk.messenger.user.User;
 import com.pvlbndrnk.messenger.user.UserRepository;
@@ -128,6 +129,17 @@ class AuthServiceTest {
         TokenResult tokenResult = authService.createAccessToken("refresh-token");
 
         assertThat(tokenResult).isEqualTo(new TokenResult(john, "new-access-token", 900L));
+    }
+
+    @Test
+    void refreshWithInvalidTokenIssuesNoAccessToken() {
+        when(tokenService.findValidRefreshToken("invalid-token"))
+                .thenThrow(new InvalidTokenException());
+
+        assertThatThrownBy(() -> authService.createAccessToken("invalid-token"))
+                .isInstanceOf(InvalidTokenException.class);
+
+        verify(tokenService, never()).createRefreshToken(any());
     }
 
     private User userWithId(String username) {
