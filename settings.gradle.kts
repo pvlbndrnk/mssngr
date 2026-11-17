@@ -19,7 +19,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "kmp-websocket-chat"
+rootProject.name = "mssngr"
 
 include(":shared")
 include(":androidApp")

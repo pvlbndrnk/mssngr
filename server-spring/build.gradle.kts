@@ -9,18 +9,41 @@ java {
     }
 }
 
+val mockitoAgent = configurations.create("mockitoAgent")
+
 dependencies {
     implementation(platform(libs.spring.boot.bom))
     annotationProcessor(platform(libs.spring.boot.bom))
 
     implementation(libs.spring.boot.starter.webmvc)
     implementation(libs.spring.boot.starter.websocket)
+    implementation(libs.spring.boot.starter.validation)
+
     implementation(libs.spring.boot.starter.flyway)
     implementation(libs.spring.boot.starter.data.jpa)
+
+    implementation(libs.spring.boot.starter.security)
+    implementation(libs.bouncycastle.bcprov.jdk18on)
+    implementation(libs.spring.boot.starter.oauth2.resource.server)
 
     runtimeOnly(libs.postgresql)
     runtimeOnly(libs.flyway.database.postgresql)
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
+
+    testImplementation(libs.spring.boot.starter.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
+
+    testImplementation(libs.spring.boot.starter.security.test)
+
+    testImplementation(libs.mockito.core)
+    mockitoAgent(libs.mockito.core) {
+        isTransitive = false
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+    jvmArgs("-javaagent:${mockitoAgent.asPath}")
 }
