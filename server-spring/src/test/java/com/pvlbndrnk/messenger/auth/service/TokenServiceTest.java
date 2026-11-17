@@ -61,8 +61,8 @@ class TokenServiceTest {
 
     private final AuthProperties authProperties = new AuthProperties(
             new AuthProperties.Jwt(
-                    Duration.ofMinutes(15),
-                    Duration.ofDays(30),
+                    Duration.ofMinutes(5),
+                    Duration.ofDays(7),
                     "dummy-base64-secret-for-unit-tests"
             )
     );

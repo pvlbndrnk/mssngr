@@ -54,7 +54,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode("secret")).thenReturn("encoded-secret");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User registered = authService.register(" John ", "secret");
+        User registered = authService.register(" JoHn ", "secret");
 
         assertThat(registered.getUsername()).isEqualTo("john");
         assertThat(registered.getPasswordHash()).isEqualTo("encoded-secret");
@@ -64,7 +64,7 @@ class AuthServiceTest {
     void registerRejectsTakenUsernameWithoutHashingPassword() {
         when(userRepository.existsByUsername("john")).thenReturn(true);
 
-        assertThatThrownBy(() -> authService.register("John", "secret"))
+        assertThatThrownBy(() -> authService.register("john", "secret"))
                 .isInstanceOf(UserAlreadyExistsException.class);
 
         verify(userRepository, never()).save(any());
@@ -79,30 +79,30 @@ class AuthServiceTest {
                 new DataIntegrityViolationException("duplicate key users_username_key")
         );
 
-        assertThatThrownBy(() -> authService.register("John", "secret"))
+        assertThatThrownBy(() -> authService.register("john", "secret"))
                 .isInstanceOf(UserAlreadyExistsException.class);
     }
 
     @Test
     void loginPassesRawCredentialsToAuthenticationManagerAndIssuesBothTokens() {
-        User user = TestUsers.create("John", "hash");
+        User user = TestUsers.create("john", "hash");
         when(authenticationManager.authenticate(any()))
                 .thenReturn(UsernamePasswordAuthenticationToken.authenticated(
-                        "John",
+                        "john",
                         null,
                         List.of()
                 ));
-        when(userRepository.findByUsername("John")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername("john")).thenReturn(Optional.of(user));
         when(tokenService.createAccessToken(user)).thenReturn("access-token");
         when(tokenService.createRefreshToken(user)).thenReturn("refresh-token");
         when(tokenService.accessTokenTtlInSeconds()).thenReturn(900L);
 
-        LoginResult result = authService.login("John", "secret");
+        LoginResult result = authService.login("john", "secret");
 
         assertThat(result).isEqualTo(new LoginResult(user, "access-token", "refresh-token", 900L));
         verify(authenticationManager).authenticate(argThat(request ->
                 !request.isAuthenticated()
-                        && request.getName().equals("John")
+                        && request.getName().equals("john")
                         && "secret".equals(request.getCredentials())));
     }
 
@@ -111,7 +111,7 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        assertThatThrownBy(() -> authService.login("Jogn", "wrong"))
+        assertThatThrownBy(() -> authService.login("john", "wrong"))
                 .isInstanceOf(BadCredentialsException.class);
 
         verifyNoInteractions(tokenService);
@@ -119,7 +119,7 @@ class AuthServiceTest {
 
     @Test
     void refreshIssuesAccessTokenForRefreshTokenOwner() {
-        User john = TestUsers.create("John", "hash");
+        User john = TestUsers.create("john", "hash");
         Token token = Token.create(john, "hash", Instant.now().plusSeconds(20));
         when(tokenService.findValidRefreshToken("refresh-token")).thenReturn(token);
         when(tokenService.createAccessToken(john)).thenReturn("new-access-token");
@@ -138,6 +138,6 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.createAccessToken("invalid-token"))
                 .isInstanceOf(InvalidTokenException.class);
 
-        verify(tokenService, never()).createRefreshToken(any());
+        verify(tokenService, never()).createAccessToken(any());
     }
 }
