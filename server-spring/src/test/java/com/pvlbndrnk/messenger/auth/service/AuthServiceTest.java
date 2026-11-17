@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -101,6 +102,17 @@ class AuthServiceTest {
                 !request.isAuthenticated()
                         && request.getName().equals("John")
                         && "secret".equals(request.getCredentials())));
+    }
+
+    @Test
+    void loginWithBadCredentialsIssuesNoTokens() {
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        assertThatThrownBy(() -> authService.login("Jogn", "wrong"))
+                .isInstanceOf(BadCredentialsException.class);
+
+        verifyNoInteractions(tokenService);
     }
 
     private User userWithId(String username) {
