@@ -16,6 +16,7 @@ import org.koin.ktor.ext.inject
 fun Application.configureRouting() {
     val roomController by inject<RoomController>()
     routing {
+        health()
         chatSocket(roomController)
         getAllMessages(roomController)
     }

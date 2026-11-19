@@ -42,7 +42,7 @@ healthy_image() {
     if [[ "$(docker inspect --format '{{.Config.Image}}' "$server_container" 2>/dev/null || true)" == "$expected_image" ]] &&
        curl -fsS -o /dev/null --max-time 5 --noproxy '*' \
          --resolve pvlbndrnk.duckdns.org:443:127.0.0.1 \
-         https://pvlbndrnk.duckdns.org/messages; then
+         https://pvlbndrnk.duckdns.org/health; then
       return 0
     fi
     sleep 3

@@ -38,6 +38,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.authorizeHttpRequests(auth -> {
+            auth.requestMatchers(HttpMethod.GET, "/health").permitAll();
             auth.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
             auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
             auth.requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll();
