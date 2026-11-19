@@ -13,8 +13,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 compose_project=server
 server_container="${compose_project}-server-1"
 db_container="${compose_project}-db-1"
-ktor_repo=ghcr.io/pvlbndrnk/kmp-websocket-chat-server-ktor
-spring_repo=ghcr.io/pvlbndrnk/kmp-websocket-chat-server-spring
+ktor_repo=ghcr.io/pvlbndrnk/mssngr-server-ktor
+spring_repo=ghcr.io/pvlbndrnk/mssngr-server-spring
 
 compose() {
   local server_kind="$1"

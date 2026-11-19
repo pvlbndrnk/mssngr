@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct ChatApp: App {
+struct MssngrApp: App {
     var body: some Scene {
         WindowGroup { ContentView() }
     }

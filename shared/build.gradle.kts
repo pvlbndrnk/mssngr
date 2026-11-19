@@ -18,7 +18,7 @@ kotlin {
 
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
         binaries.framework {
-            baseName = "SharedChat"
+            baseName = "Shared"
             isStatic = true
         }
     }

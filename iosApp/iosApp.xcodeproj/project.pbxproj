@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A00000000000000000000001 /* ChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000003 /* ChatApp.swift */; };
+		A00000000000000000000001 /* MssngrApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000003 /* MssngrApp.swift */; };
 		A00000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000004 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A00000000000000000000003 /* ChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatApp.swift; sourceTree = "<group>"; };
+		A00000000000000000000003 /* MssngrApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MssngrApp.swift; sourceTree = "<group>"; };
 		A00000000000000000000004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A00000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A00000000000000000000006 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,7 +30,7 @@
 		A00000000000000000000008 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
-				A00000000000000000000003 /* ChatApp.swift */,
+				A00000000000000000000003 /* MssngrApp.swift */,
 				A00000000000000000000004 /* ContentView.swift */,
 				A00000000000000000000005 /* Info.plist */,
 			);
@@ -119,7 +119,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A00000000000000000000001 /* ChatApp.swift in Sources */,
+				A00000000000000000000001 /* MssngrApp.swift in Sources */,
 				A00000000000000000000002 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -147,7 +147,7 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
-					SharedChat,
+					Shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.pvlbndrnk.chat.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -178,7 +178,7 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-framework",
-					SharedChat,
+					Shared,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.pvlbndrnk.chat.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";

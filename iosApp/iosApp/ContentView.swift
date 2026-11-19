@@ -1,5 +1,5 @@
 import SwiftUI
-import SharedChat
+import Shared
 
 struct ContentView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {

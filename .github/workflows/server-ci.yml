@@ -84,7 +84,7 @@ jobs:
           file: ./server-ktor/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/pvlbndrnk/kmp-websocket-chat-server-ktor:${{ github.sha }}
+          tags: ghcr.io/pvlbndrnk/mssngr-server-ktor:${{ github.sha }}
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Build & Publish Spring Server Image
@@ -95,7 +95,7 @@ jobs:
           file: ./server-spring/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/pvlbndrnk/kmp-websocket-chat-server-spring:${{ github.sha }}
+          tags: ghcr.io/pvlbndrnk/mssngr-server-spring:${{ github.sha }}
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
       - name: Show published digests
